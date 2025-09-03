@@ -16,8 +16,33 @@ app.get('/raw-video.mkv', (req, res) => {
     if (!fs.existsSync(mkvPath)) {
         return res.status(404).send('Video file not found');
     }
-    res.setHeader('Content-Type', 'video/x-matroska');
-    fs.createReadStream(mkvPath).pipe(res);
+
+    const stat = fs.statSync(mkvPath);
+    const fileSize = stat.size;
+    const range = req.headers.range;
+
+    if (range) {
+        const parts = range.replace(/bytes=/, "").split("-");
+        const start = parseInt(parts[0], 10);
+        const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+        const chunkSize = (end - start) + 1;
+
+        res.writeHead(206, {
+            'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+            'Accept-Ranges': 'bytes',
+            'Content-Length': chunkSize,
+            'Content-Type': 'video/x-matroska'
+        });
+
+        fs.createReadStream(mkvPath, { start, end }).pipe(res);
+    } else {
+        res.writeHead(200, {
+            'Content-Length': fileSize,
+            'Content-Type': 'video/x-matroska',
+            'Accept-Ranges': 'bytes'
+        });
+        fs.createReadStream(mkvPath).pipe(res);
+    }
 });
 
 app.listen(PORT, () => {

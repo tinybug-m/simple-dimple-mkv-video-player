@@ -1,7 +1,7 @@
 {
   "name": "mkv-video-player",
   "version": "1.0.0",
-  "description": "Node.js app to stream MKV files as WebM using FFmpeg",
+  "description": "Node.js app to stream MKV",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
